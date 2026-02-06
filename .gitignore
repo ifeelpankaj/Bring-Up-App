@@ -1,0 +1,76 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native build folders (regenerated)
+.kotlin/
+*.orig.*
+
+# Certificates and Keys (NEVER commit these)
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.keystore
+google-service-account.json
+*-firebase-adminsdk.json
+get-this-application-firebase-adminsdk.json
+
+# Firebase/Google Services (use example files instead)
+google-services.json
+GoogleService-Info.plist
+
+# Metro
+.metro-health-check*
+
+# Debug logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# Environment files (NEVER commit these)
+.env
+.env.*
+.env*.local
+!.env.example
+
+# TypeScript
+*.tsbuildinfo
+
+# Example/scaffold folders
+app-example
+
+# Generated native folders (use prebuild)
+/ios
+/android
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build outputs
+build/
+*.apk
+*.aab
+*.ipa
+
+# Test coverage
+coverage/
+
+# Logs
+logs/
+*.log
