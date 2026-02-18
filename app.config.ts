@@ -8,25 +8,37 @@ const APP_ENV = process.env.APP_ENV || "development";
 const getApiBaseUrl = (): string => {
   switch (APP_ENV) {
     case "production":
-      return process.env.API_BASE_URL_PROD || "https://api.bringup.app/api/v1";
+      return (
+        process.env.API_BASE_URL_PROD ||
+        "https://bring-up-server.onrender.com/api/v1"
+      );
     case "staging":
       return (
         process.env.API_BASE_URL_STAGING ||
-        "https://staging-api.bringup.app/api/v1"
+        "https://bring-up-server.onrender.com/api/v1"
       );
     default:
-      return process.env.API_BASE_URL_DEV || "http://localhost:4000/api/v1";
+      return (
+        process.env.API_BASE_URL_DEV ||
+        "https://bring-up-server.onrender.com/api/v1"
+      );
   }
 };
 
 const getWsBaseUrl = (): string => {
   switch (APP_ENV) {
     case "production":
-      return process.env.WS_BASE_URL_PROD || "wss://api.bringup.app";
+      return (
+        process.env.WS_BASE_URL_PROD || "wss://bring-up-server.onrender.com"
+      );
     case "staging":
-      return process.env.WS_BASE_URL_STAGING || "wss://staging-api.bringup.app";
+      return (
+        process.env.WS_BASE_URL_STAGING || "wss://bring-up-server.onrender.com"
+      );
     default:
-      return process.env.WS_BASE_URL_DEV || "ws://localhost:4000";
+      return (
+        process.env.WS_BASE_URL_DEV || "wss://bring-up-server.onrender.com"
+      );
   }
 };
 
@@ -36,7 +48,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   slug: "bringup",
   version: "1.0.0",
   orientation: "portrait",
-  icon: "./assets/images/logo.png",
+  icon: "./assets/images/app-icon-1024.png",
   scheme: "bringup",
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
@@ -56,16 +68,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     versionCode: 1,
     adaptiveIcon: {
       backgroundColor: "#E6F4FE",
-      foregroundImage: "./assets/images/logo.png",
+      foregroundImage: "./assets/images/adaptive-foreground.png",
       backgroundImage: "./assets/images/android-icon-background.png",
-      monochromeImage: "./assets/images/logo.png",
+      monochromeImage: "./assets/images/adaptive-foreground.png",
     },
     permissions: [
       "android.permission.POST_NOTIFICATIONS",
       "android.permission.RECEIVE_BOOT_COMPLETED",
       "android.permission.VIBRATE",
+      "android.permission.INTERNET",
     ],
-    googleServicesFile: "./google-services.json",
+    googleServicesFile:
+      process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json",
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
   },
@@ -82,7 +96,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       "expo-splash-screen",
       {
-        image: "./assets/images/logo.png",
+        image: "./assets/images/app-icon-1024.png",
         imageWidth: 200,
         resizeMode: "contain",
         backgroundColor: "#ffffff",
@@ -104,6 +118,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           compileSdkVersion: 35,
           targetSdkVersion: 35,
           buildToolsVersion: "35.0.0",
+          enableProguardInReleaseBuilds: false,
+          enableShrinkResourcesInReleaseBuilds: false,
         },
       },
     ],

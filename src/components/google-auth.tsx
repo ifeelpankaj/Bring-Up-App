@@ -12,16 +12,15 @@ import {
   getAuth,
   signInWithCredential,
   GoogleAuthProvider,
-  signOut as firebaseSignOut,
   getIdToken,
 } from "@react-native-firebase/auth";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { useLoginMutation } from "../store/api/auth.api";
-import { useAppDispatch } from "../store/hooks";
 import { useRouter } from "expo-router";
 import { getFcmToken } from "../store/api/base.query";
 import { FIREBASE_CONFIG, logError, logDebug } from "../config/env";
 import { ERROR_MESSAGES } from "../config/constants";
+import Toast from "react-native-toast-message";
 
 // Google G Logo SVG Component
 const GoogleLogo = () => (
@@ -51,15 +50,11 @@ GoogleSignin.configure({
 
 const GoogleSignInButton = () => {
   const [login, { isLoading }] = useLoginMutation();
-  const dispatch = useAppDispatch();
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
   const [isPressed, setIsPressed] = useState(false);
 
   async function onGoogleButtonPress() {
     try {
-      setError(null);
-
       // Check if device supports Google Play
       await GoogleSignin.hasPlayServices({
         showPlayServicesUpdateDialog: true,
@@ -67,6 +62,25 @@ const GoogleSignInButton = () => {
 
       // Get the users ID token from Google
       const signInResult = await GoogleSignin.signIn();
+
+      // Debug: Show the full signInResult in a Toast (stringified, truncated if too long)
+      try {
+        const resultString = JSON.stringify(signInResult);
+        Toast.show({
+          type: "info",
+          text1: "signInResult",
+          text2:
+            resultString.length > 200
+              ? resultString.substring(0, 200) + "..."
+              : resultString,
+        });
+      } catch (e) {
+        Toast.show({
+          type: "info",
+          text1: "signInResult",
+          text2: "[Could not stringify result]",
+        });
+      }
 
       // Try the new style of google-sign in result, from v13+ of that module
       let idToken = signInResult.data?.idToken;
@@ -101,16 +115,17 @@ const GoogleSignInButton = () => {
       }
 
       // Send the Firebase token to your backend
-      const response = await login({ firebaseToken, fcmToken }).unwrap();
-
-      logDebug("Login successful:", response);
-
+      await login({ firebaseToken, fcmToken }).unwrap();
       router.navigate("/(tabs)/assigned");
     } catch (error) {
       logError("GoogleSignIn", error);
       const errorMessage =
         error instanceof Error ? error.message : ERROR_MESSAGES.NETWORK_ERROR;
-      setError(errorMessage);
+      Toast.show({
+        type: "error",
+        text1: "Sign In Failed",
+        text2: errorMessage,
+      });
     }
   }
 
@@ -139,12 +154,6 @@ const GoogleSignInButton = () => {
           </Text>
         </View>
       </TouchableOpacity>
-
-      {error && (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      )}
     </View>
   );
 };
@@ -187,21 +196,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#3C4043",
     letterSpacing: 0.2,
-  },
-  errorContainer: {
-    marginTop: 16,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: "rgba(244, 67, 54, 0.1)",
-    borderRadius: 12,
-    maxWidth: 320,
-    width: "100%",
-  },
-  errorText: {
-    color: "#D32F2F",
-    fontSize: 13,
-    textAlign: "center",
-    lineHeight: 18,
   },
 });
 

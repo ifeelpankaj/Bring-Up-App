@@ -110,6 +110,10 @@ export enum NotificationType {
   TASK_UPDATED = "task_updated",
   TASK_DELETED = "task_deleted",
   SYSTEM_ALERT = "system_alert",
+  TASK_ACCEPTED = "task_accepted",
+  TASK_REJECTED = "task_declined",
+  DEADLINE_APPROACHING = "deadline_approaching",
+  TASK_OVERDUE = "task_overdue",
 }
 
 /**

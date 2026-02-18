@@ -96,7 +96,7 @@ export default function Index() {
           >
             <View style={styles.logoWrapper}>
               <Image
-                source={require("../../assets/images/bringuplogo.png")}
+                source={require("../../assets/images/app-icon-1024.png")}
                 style={styles.logo}
               />
             </View>

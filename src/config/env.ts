@@ -55,8 +55,8 @@ const currentEnvironment = getCurrentEnvironment();
 
 // Build environment config from expo-constants
 const ENV: EnvironmentConfig = {
-  apiBaseUrl: extra.apiBaseUrl || "http://localhost:4000/api/v1",
-  wsBaseUrl: extra.wsBaseUrl || "ws://localhost:4000",
+  apiBaseUrl: extra.apiBaseUrl || "https://bring-up-server.onrender.com/api/v1",
+  wsBaseUrl: extra.wsBaseUrl || "wss://bring-up-server.onrender.com",
   environment: currentEnvironment,
   debug: currentEnvironment !== "production",
 };

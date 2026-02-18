@@ -17,7 +17,7 @@ import {
   useMarkAsReadMutation,
   useMarkAllAsReadMutation,
 } from "../../store/api/alert.api";
-import { NotificationType, Notification } from "../../types";
+import { NotificationType } from "../../types";
 
 // Helper to format time ago
 const formatTimeAgo = (timestamp: any): string => {

@@ -9,13 +9,14 @@ import {
   ActivityIndicator,
 } from "react-native";
 import * as Notifications from "expo-notifications";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import {
   useGetMyTasksInfiniteQuery,
   useUpdateTaskReactionMutation,
   useCompleteTaskMutation,
 } from "../../store/api/task.api";
-import type { Task, TabType } from "../../types/task.types";
+import type { Task, TabType, TaskResponse } from "../../types/task.types";
 import { TaskReaction } from "../../types/task.types";
 import { TaskCard } from "../../components/TaskCard";
 import { EmptyState } from "../../components/EmptyState";
@@ -33,8 +34,9 @@ import {
 const PAGE_SIZE = 20;
 
 export default function InboxScreen() {
+  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<TabType>("new");
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedTask, setSelectedTask] = useState<TaskResponse | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [page, setPage] = useState(1);
 
@@ -164,28 +166,35 @@ export default function InboxScreen() {
     [activeTab],
   );
 
+  const themedStyles = makeStyles(insets);
+
   if (isLoading) {
     return (
-      <View style={styles.container}>
+      <View style={themedStyles.container}>
         <StatusBar
           barStyle="dark-content"
           backgroundColor={COLORS.background}
+          translucent
         />
-        <View style={styles.loadingContainer}>
+        <View style={themedStyles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.secondary} />
-          <Text style={styles.loadingText}>Loading tasks...</Text>
+          <Text style={themedStyles.loadingText}>Loading tasks...</Text>
         </View>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+    <View style={themedStyles.container}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor={COLORS.background}
+        translucent
+      />
 
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Inbox</Text>
-        <Text style={styles.headerSubtitle}>
+      <View style={themedStyles.header}>
+        <Text style={themedStyles.headerTitle}>Inbox</Text>
+        <Text style={themedStyles.headerSubtitle}>
           {tasks?.length || 0} {tasks?.length === 1 ? "task" : "tasks"} assigned
         </Text>
       </View>
@@ -196,7 +205,7 @@ export default function InboxScreen() {
         data={currentTasks}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={themedStyles.listContent}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={ListEmptyComponent}
         onEndReached={loadMore}
@@ -234,42 +243,45 @@ export default function InboxScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  header: {
-    paddingHorizontal: SPACING.xxl,
-    paddingTop: 60,
-    paddingBottom: SPACING.xl,
-  },
-  headerTitle: {
-    fontSize: TYPOGRAPHY.fontSize.display,
-    fontWeight: "300",
-    color: COLORS.text.primary,
-    letterSpacing: -1,
-  },
-  headerSubtitle: {
-    fontSize: TYPOGRAPHY.fontSize.md,
-    color: COLORS.text.tertiary,
-    fontWeight: "500",
-    marginTop: SPACING.xs,
-  },
-  listContent: {
-    paddingHorizontal: SPACING.xxl,
-    paddingBottom: PLATFORM_STYLES.tabBarHeight + SPACING.xl,
-    flexGrow: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    gap: SPACING.lg,
-  },
-  loadingText: {
-    fontSize: TYPOGRAPHY.fontSize.lg,
-    color: COLORS.text.tertiary,
-    fontWeight: "500",
-  },
-});
+const makeStyles = (insets: ReturnType<typeof useSafeAreaInsets>) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: COLORS.background,
+    },
+    header: {
+      paddingHorizontal: SPACING.xxl,
+      // Uses insets.top so header clears the status bar/notch on both platforms
+      paddingTop: insets.top + SPACING.lg,
+      paddingBottom: SPACING.xl,
+    },
+    headerTitle: {
+      fontSize: TYPOGRAPHY.fontSize.display,
+      fontWeight: "300",
+      color: COLORS.text.primary,
+      letterSpacing: -1,
+    },
+    headerSubtitle: {
+      fontSize: TYPOGRAPHY.fontSize.md,
+      color: COLORS.text.tertiary,
+      fontWeight: "500",
+      marginTop: SPACING.xs,
+    },
+    listContent: {
+      paddingHorizontal: SPACING.xxl,
+      // insets.bottom ensures content clears the home indicator on iOS
+      paddingBottom: insets.bottom + PLATFORM_STYLES.tabBarHeight + SPACING.xl,
+      flexGrow: 1,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      gap: SPACING.lg,
+    },
+    loadingText: {
+      fontSize: TYPOGRAPHY.fontSize.lg,
+      color: COLORS.text.tertiary,
+      fontWeight: "500",
+    },
+  });
