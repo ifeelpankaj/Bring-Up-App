@@ -552,6 +552,7 @@ import {
   ActivityIndicator,
   StyleSheet,
   Animated,
+  StatusBar,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Feather from "@expo/vector-icons/Feather";
@@ -755,152 +756,155 @@ export default function CreateTaskPage() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
-    >
-      <LinearGradient
-        colors={["#FFFFFF", "#FFF8F3"]}
-        style={styles.gradientBg}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+    <>
+      <StatusBar barStyle="dark-content" backgroundColor="#FAF8F6" />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
       >
-        <ScrollView
-          contentContainerStyle={[
-            styles.scrollContent,
-            {
-              // ✅ Accounts for home indicator on iOS and
-              // gesture nav bar on Android
-              paddingBottom: insets.bottom + SPACING.xxxl,
-            },
-          ]}
-          showsVerticalScrollIndicator={false}
+        <LinearGradient
+          colors={["#FFFFFF", "#FFF8F3"]}
+          style={styles.gradientBg}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
         >
-          {/* Header */}
-          <View
-            style={[
-              styles.header,
+          <ScrollView
+            contentContainerStyle={[
+              styles.scrollContent,
               {
-                // ✅ Clears notch / Dynamic Island on iOS
-                // and translucent status bar on Android
-                paddingTop: insets.top + SPACING.lg,
+                // ✅ Accounts for home indicator on iOS and
+                // gesture nav bar on Android
+                paddingBottom: insets.bottom + SPACING.xxxl,
               },
             ]}
+            showsVerticalScrollIndicator={false}
           >
-            <View style={styles.headerIconContainer}>
-              <LinearGradient
-                colors={[COLORS.secondary, `${COLORS.secondary}DD`]}
-                style={styles.headerIcon}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <Feather
-                  name="plus-circle"
-                  size={32}
-                  color={COLORS.text.white}
-                />
-              </LinearGradient>
-            </View>
-            <Text style={styles.headerTitle}>Create New Task</Text>
-            <Text style={styles.headerSubtitle}>
-              Assign work to your team and track progress
-            </Text>
-          </View>
-
-          {/* Form Card */}
-          <View style={[styles.formCard, SHADOWS.md]}>
-            <FormInput
-              label="Task Title"
-              placeholder="e.g., Review project proposal"
-              value={title}
-              onChangeText={setTitle}
-              error={errors.title}
-              required
-              icon="edit-3"
-            />
-
-            <FormInput
-              label="Description"
-              placeholder="Add task details and context"
-              value={note}
-              onChangeText={setNote}
-              multiline
-              numberOfLines={4}
-              helpText="Keep it concise but informative"
-              icon="message-square"
-            />
-
-            <FormInput
-              label="Duration (minutes)"
-              placeholder="e.g., 60"
-              value={durationMinutes}
-              onChangeText={setDurationMinutes}
-              keyboardType="numeric"
-              error={errors.durationMinutes}
-              required
-              helpText="Between 30 and 43,200 minutes (30 days)"
-              icon="clock"
-            />
-
-            <FormInput
-              label="Assign To Email"
-              placeholder="colleague@company.com"
-              value={assignToEmail}
-              onChangeText={setAssignToEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              error={errors.assignToEmail}
-              required
-              icon="user"
-            />
-
-            {/* Quick Tips */}
-            <View style={styles.tipsContainer}>
-              <View style={styles.tipIcon}>
-                <Feather name="zap" size={16} color={COLORS.secondary} />
-              </View>
-              <View style={styles.tipContent}>
-                <Text style={styles.tipTitle}>💡 Quick Tip</Text>
-                <Text style={styles.tipText}>
-                  Clear and specific tasks get completed faster. Include
-                  deadlines and context!
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Submit Button */}
-          <LinearGradient
-            colors={
-              isLoading
-                ? [COLORS.text.light, COLORS.text.light]
-                : [COLORS.secondary, COLORS.secondaryDark]
-            }
-            style={[styles.submitButton, SHADOWS.lg]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <TouchableOpacity
-              onPress={handleSubmit}
-              disabled={isLoading}
-              activeOpacity={0.8}
-              style={styles.submitButtonContent}
+            {/* Header */}
+            <View
+              style={[
+                styles.header,
+                {
+                  // ✅ Clears notch / Dynamic Island on iOS
+                  // and translucent status bar on Android
+                  paddingTop: insets.top + SPACING.lg,
+                },
+              ]}
             >
-              {isLoading ? (
-                <ActivityIndicator color={COLORS.text.white} size="small" />
-              ) : (
-                <>
-                  <Feather name="send" size={18} color={COLORS.text.white} />
-                  <Text style={styles.submitButtonText}>Create Task</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </LinearGradient>
-        </ScrollView>
+              <View style={styles.headerIconContainer}>
+                <LinearGradient
+                  colors={[COLORS.secondary, `${COLORS.secondary}DD`]}
+                  style={styles.headerIcon}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Feather
+                    name="plus-circle"
+                    size={32}
+                    color={COLORS.text.white}
+                  />
+                </LinearGradient>
+              </View>
+              <Text style={styles.headerTitle}>Create New Task</Text>
+              <Text style={styles.headerSubtitle}>
+                Assign work to your team and track progress
+              </Text>
+            </View>
 
-        <SuccessModal visible={showSuccess} />
-      </LinearGradient>
-    </KeyboardAvoidingView>
+            {/* Form Card */}
+            <View style={[styles.formCard, SHADOWS.md]}>
+              <FormInput
+                label="Task Title"
+                placeholder="e.g., Review project proposal"
+                value={title}
+                onChangeText={setTitle}
+                error={errors.title}
+                required
+                icon="edit-3"
+              />
+
+              <FormInput
+                label="Description"
+                placeholder="Add task details and context"
+                value={note}
+                onChangeText={setNote}
+                multiline
+                numberOfLines={4}
+                helpText="Keep it concise but informative"
+                icon="message-square"
+              />
+
+              <FormInput
+                label="Duration (minutes)"
+                placeholder="e.g., 60"
+                value={durationMinutes}
+                onChangeText={setDurationMinutes}
+                keyboardType="numeric"
+                error={errors.durationMinutes}
+                required
+                helpText="Between 30 and 43,200 minutes (30 days)"
+                icon="clock"
+              />
+
+              <FormInput
+                label="Assign To Email"
+                placeholder="colleague@company.com"
+                value={assignToEmail}
+                onChangeText={setAssignToEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                error={errors.assignToEmail}
+                required
+                icon="user"
+              />
+
+              {/* Quick Tips */}
+              <View style={styles.tipsContainer}>
+                <View style={styles.tipIcon}>
+                  <Feather name="zap" size={16} color={COLORS.secondary} />
+                </View>
+                <View style={styles.tipContent}>
+                  <Text style={styles.tipTitle}>💡 Quick Tip</Text>
+                  <Text style={styles.tipText}>
+                    Clear and specific tasks get completed faster. Include
+                    deadlines and context!
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Submit Button */}
+            <LinearGradient
+              colors={
+                isLoading
+                  ? [COLORS.text.light, COLORS.text.light]
+                  : [COLORS.secondary, COLORS.secondaryDark]
+              }
+              style={[styles.submitButton, SHADOWS.lg]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <TouchableOpacity
+                onPress={handleSubmit}
+                disabled={isLoading}
+                activeOpacity={0.8}
+                style={styles.submitButtonContent}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color={COLORS.text.white} size="small" />
+                ) : (
+                  <>
+                    <Feather name="send" size={18} color={COLORS.text.white} />
+                    <Text style={styles.submitButtonText}>Create Task</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </LinearGradient>
+          </ScrollView>
+
+          <SuccessModal visible={showSuccess} />
+        </LinearGradient>
+      </KeyboardAvoidingView>
+    </>
   );
 }
 

@@ -18,7 +18,7 @@ import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { useLoginMutation } from "../store/api/auth.api";
 import { useRouter } from "expo-router";
 import { getFcmToken } from "../store/api/base.query";
-import { FIREBASE_CONFIG, logError, logDebug } from "../config/env";
+import { FIREBASE_CONFIG } from "../config/env";
 import { ERROR_MESSAGES } from "../config/constants";
 import Toast from "react-native-toast-message";
 
@@ -63,31 +63,13 @@ const GoogleSignInButton = () => {
       // Get the users ID token from Google
       const signInResult = await GoogleSignin.signIn();
 
-      // Debug: Show the full signInResult in a Toast (stringified, truncated if too long)
-      try {
-        const resultString = JSON.stringify(signInResult);
-        Toast.show({
-          type: "info",
-          text1: "signInResult",
-          text2:
-            resultString.length > 200
-              ? resultString.substring(0, 200) + "..."
-              : resultString,
-        });
-      } catch (e) {
-        Toast.show({
-          type: "info",
-          text1: "signInResult",
-          text2: "[Could not stringify result]",
-        });
-      }
-
       // Try the new style of google-sign in result, from v13+ of that module
       let idToken = signInResult.data?.idToken;
-      if (!idToken) {
-        // if you are using older versions of google-signin, try old style result
-        idToken = signInResult.idToken;
-      }
+      // if (!idToken) {
+      //   // if you are using older versions of google-signin, try old style result
+      //   idToken = signInResult.idToken;
+      // }
+
       if (!idToken) {
         throw new Error("No ID token found");
       }
@@ -100,25 +82,23 @@ const GoogleSignInButton = () => {
 
       // Sign-in the user with Firebase
       const userCredential = await signInWithCredential(auth, googleCredential);
-
       // Get the Firebase ID token using modular API
       const firebaseToken = await getIdToken(userCredential.user);
 
       const fcmToken = await getFcmToken();
 
       if (!fcmToken) {
-        logDebug(
-          "⚠️ Warning: No FCM token obtained. Push notifications may not work.",
-        );
-      } else {
-        logDebug("✓ FCM Token obtained:", fcmToken.substring(0, 20) + "...");
+        Toast.show({
+          type: "info",
+          text1:
+            "⚠️ Warning: No FCM token obtained. Push notifications may not work.",
+        });
       }
 
       // Send the Firebase token to your backend
       await login({ firebaseToken, fcmToken }).unwrap();
       router.navigate("/(tabs)/assigned");
     } catch (error) {
-      logError("GoogleSignIn", error);
       const errorMessage =
         error instanceof Error ? error.message : ERROR_MESSAGES.NETWORK_ERROR;
       Toast.show({

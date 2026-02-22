@@ -16,7 +16,7 @@
 export enum TaskReaction {
   ON_IT = "on_it",
   RUNNING_LATE = "running_late",
-  NEED_HELP = "need_help",
+  CANT_DO = `can't_complete`,
 }
 
 /**

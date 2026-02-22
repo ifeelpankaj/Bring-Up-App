@@ -65,7 +65,7 @@ export const useOutboxTaskCategorization = (
       const isExpired = expiresAt < now || isStatus(task, TaskStatus.EXPIRED);
       return (
         isStatus(task, TaskStatus.COMPLETED) ||
-        hasReaction(task, TaskReaction.CANT_DO) ||
+        hasReaction(task, TaskReaction.NEED_HELP) ||
         isExpired ||
         isStatus(task, TaskStatus.CANCELLED)
       );

@@ -4,9 +4,9 @@
  * Helper functions for outbox task operations.
  */
 
-import type { Task } from "../types/task.types";
+import type { TaskResponse } from "../types/task.types";
 import { TaskReaction, TaskStatus } from "../types/task.types";
-import { getExpiresAt, parseTimestamp } from "./task.utils";
+import { getExpiresAt } from "./task.utils";
 
 /** Status badge configuration */
 export interface StatusBadge {
@@ -19,21 +19,21 @@ export interface StatusBadge {
 /**
  * Check if task has a specific status
  */
-const isStatus = (task: Task, status: TaskStatus | string): boolean => {
+const isStatus = (task: TaskResponse, status: TaskStatus | string): boolean => {
   return String(task.status).toLowerCase() === status.toLowerCase();
 };
 
 /**
  * Check if task has a specific reaction
  */
-const hasReaction = (task: Task, reaction: TaskReaction): boolean => {
+const hasReaction = (task: TaskResponse, reaction: TaskReaction): boolean => {
   return String(task.assigneeReaction) === reaction;
 };
 
 /**
  * Get status badge configuration for outbox tasks
  */
-export const getStatusBadge = (task: Task): StatusBadge => {
+export const getStatusBadge = (task: TaskResponse): StatusBadge => {
   const now = new Date();
   const expiresAt = getExpiresAt(task);
   const isExpired = expiresAt < now || isStatus(task, TaskStatus.EXPIRED);
@@ -110,7 +110,7 @@ export const getStatusBadge = (task: Task): StatusBadge => {
 /**
  * Format deadline for outbox tasks
  */
-export const formatOutboxDeadline = (task: Task): string => {
+export const formatOutboxDeadline = (task: TaskResponse): string => {
   const expiresAt = getExpiresAt(task);
   const now = new Date();
   const diff = expiresAt.getTime() - now.getTime();

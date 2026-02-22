@@ -1,10 +1,16 @@
-import { Stack, useRouter } from "expo-router";
+import { Stack, useRouter, SplashScreen } from "expo-router";
 import { Providers } from "../provider/store-provider";
 import { usePushNotifications } from "../hooks/usePushNotifications";
 import { useInvalidateTasks } from "../hooks/useRealtimeTasks";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { ToastProvider } from "../components/Toast";
 import { logDebug, logError } from "../config/env";
+import { useEffect } from "react";
+import { useFonts } from "expo-font";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+
+// Prevent the splash screen from auto-hiding before fonts are ready
+SplashScreen.preventAutoHideAsync();
 
 function RootLayoutContent() {
   const router = useRouter();
@@ -38,16 +44,34 @@ function RootLayoutContent() {
       }
     },
   );
+  const [fontsLoaded, fontError] = useFonts({
+    // ── Display / Brand fonts
+    Cameliya: require("../../assets/fonts/Cameliya.ttf"),
+    Moralana: require("../../assets/fonts/Moralana.otf"),
+    Rockybilly: require("../../assets/fonts/Rockybilly.ttf"),
+    RushDriver: require("../../assets/fonts/RushDriver.otf"),
+    Sprintura: require("../../assets/fonts/Sprintura.otf"),
+  });
+
+  useEffect(() => {
+    // Hide splash once fonts are loaded (or if loading errored)
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
+  // Keep splash visible while fonts are loading
+  if (!fontsLoaded && !fontError) return null;
 
   return (
-    <>
+    <SafeAreaProvider>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="settings" options={{ headerShown: false }} />
       </Stack>
       <ToastProvider />
-    </>
+    </SafeAreaProvider>
   );
 }
 
