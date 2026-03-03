@@ -2,6 +2,10 @@
 
 A React Native / Expo mobile application for task assignment and management. Built with modern best practices for scalability and maintainability.
 
+## Live Demo
+
+[BringUp APK](https://drive.google.com/drive/folders/1Lqh_pvc42JW8xHUwm-RwyhIjNMsx6yoN?usp=sharing)
+
 ## 🚀 Features
 
 - **Google Authentication** - Secure sign-in with Google via Firebase

@@ -6,6 +6,7 @@ import type {
   LoginResponse,
   LogoutResponse,
   UserProfileResponse,
+  UserSearchResponse,
 } from "../../types";
 
 export const authApi = createApi({
@@ -43,9 +44,22 @@ export const authApi = createApi({
       }),
       transformResponse: (response: UserProfileResponse) => response,
     }),
+
+    searchUsers: builder.query<UserSearchResponse, string>({
+      query: (q) => ({
+        url: `/auth/search?q=${encodeURIComponent(q)}`,
+        method: "GET",
+      }),
+      transformResponse: (response: UserSearchResponse) => response,
+    }),
   }),
 });
 
-export const { useLoginMutation, useLogoutMutation, useMeQuery } = authApi;
+export const {
+  useLoginMutation,
+  useLogoutMutation,
+  useMeQuery,
+  useLazySearchUsersQuery,
+} = authApi;
 
 export default authApi;

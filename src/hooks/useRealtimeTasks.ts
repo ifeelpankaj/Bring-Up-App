@@ -43,7 +43,7 @@ export function useRealTimeTasks({
   pollingInterval = POLLING_INTERVAL.ACTIVE,
 }: UseRealTimeTasksOptions) {
   const dispatch = useAppDispatch();
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isPollingRef = useRef(false);
 
   /**

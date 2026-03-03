@@ -6,8 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   LayoutAnimation,
-  Platform,
-  UIManager,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Feather from "@expo/vector-icons/Feather";
@@ -18,14 +16,6 @@ import {
   SHADOWS,
   TYPOGRAPHY,
 } from "../../config/theme";
-
-// Enable LayoutAnimation for Android
-if (
-  Platform.OS === "android" &&
-  UIManager.setLayoutAnimationEnabledExperimental
-) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 interface FAQItem {
   id: string;

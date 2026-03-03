@@ -1,1097 +1,1049 @@
-// import { useCreateTaskMutation } from "../../store/api/task.api";
-// import React, { useState } from "react";
-// import {
-//   View,
-//   Text,
-//   TextInput,
-//   TouchableOpacity,
-//   ScrollView,
-//   KeyboardAvoidingView,
-//   Platform,
-//   Alert,
-//   ActivityIndicator,
-//   StyleSheet,
-//   Animated,
-// } from "react-native";
-// import { LinearGradient } from "expo-linear-gradient";
-// import Feather from "@expo/vector-icons/Feather";
-// import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from "../../config/theme";
-// import {
-//   TASK_DURATION,
-//   VALIDATION,
-//   ANIMATIONS,
-//   ERROR_MESSAGES,
-// } from "../../config/constants";
-// import { logError } from "../../config/env";
-
-// interface FormErrors {
-//   title?: string;
-//   durationMinutes?: string;
-//   assignToEmail?: string;
-// }
-
-// const FormInput = ({
-//   label,
-//   placeholder,
-//   value,
-//   onChangeText,
-//   error,
-//   multiline,
-//   numberOfLines,
-//   keyboardType,
-//   autoCapitalize,
-//   required = false,
-//   helpText,
-//   icon,
-// }: any) => {
-//   return (
-//     <View style={styles.inputGroup}>
-//       <View style={styles.labelContainer}>
-//         <Text style={styles.label}>{label}</Text>
-//         {required && <Text style={styles.requiredDot}>*</Text>}
-//       </View>
-//       <View style={styles.inputWrapper}>
-//         {icon && (
-//           <View style={styles.inputIconContainer}>
-//             <Feather name={icon} size={18} color={COLORS.secondary} />
-//           </View>
-//         )}
-//         <TextInput
-//           value={value}
-//           onChangeText={onChangeText}
-//           placeholder={placeholder}
-//           multiline={multiline}
-//           numberOfLines={numberOfLines}
-//           keyboardType={keyboardType}
-//           autoCapitalize={autoCapitalize}
-//           textAlignVertical={multiline ? "top" : "center"}
-//           style={[
-//             styles.input,
-//             {
-//               borderColor: error ? COLORS.error : COLORS.border,
-//               minHeight: multiline ? 100 : 48,
-//               paddingLeft: icon ? 45 : SPACING.md,
-//             },
-//           ]}
-//           placeholderTextColor={COLORS.text.light}
-//         />
-//       </View>
-//       {error && (
-//         <View style={styles.errorContainer}>
-//           <Feather name="alert-circle" size={14} color={COLORS.error} />
-//           <Text style={styles.errorText}>{error}</Text>
-//         </View>
-//       )}
-//       {helpText && !error && <Text style={styles.helpText}>{helpText}</Text>}
-//     </View>
-//   );
-// };
-
-// const SuccessModal = ({ visible }: { visible: boolean }) => {
-//   const scaleAnim = React.useRef(new Animated.Value(0)).current;
-//   const opacityAnim = React.useRef(new Animated.Value(0)).current;
-
-//   React.useEffect(() => {
-//     if (visible) {
-//       Animated.parallel([
-//         Animated.spring(scaleAnim, {
-//           toValue: 1,
-//           tension: 10,
-//           friction: 7,
-//           useNativeDriver: true,
-//         }),
-//         Animated.timing(opacityAnim, {
-//           toValue: 1,
-//           duration: 300,
-//           useNativeDriver: true,
-//         }),
-//       ]).start();
-//     }
-//   }, [visible]);
-
-//   if (!visible) return null;
-
-//   return (
-//     <View style={styles.successOverlay}>
-//       <Animated.View
-//         style={[
-//           styles.successModalContent,
-//           {
-//             transform: [{ scale: scaleAnim }],
-//             opacity: opacityAnim,
-//           },
-//         ]}
-//       >
-//         <LinearGradient
-//           colors={[COLORS.success, `${COLORS.success}DD`]}
-//           style={styles.successGradient}
-//           start={{ x: 0, y: 0 }}
-//           end={{ x: 1, y: 1 }}
-//         >
-//           <Feather name="check-circle" size={64} color={COLORS.text.white} />
-//           <Text style={styles.successTitle}>Task Created!</Text>
-//           <Text style={styles.successMessage}>
-//             Your task has been assigned successfully
-//           </Text>
-//         </LinearGradient>
-//       </Animated.View>
-//     </View>
-//   );
-// };
-
-// export default function CreateTaskPage() {
-//   const [title, setTitle] = useState<string>("");
-//   const [note, setNote] = useState<string>("");
-//   const [durationMinutes, setDurationMinutes] = useState<string>("");
-//   const [assignToEmail, setAssignToEmail] = useState<string>("");
-//   const [errors, setErrors] = useState<FormErrors>({});
-//   const [showSuccess, setShowSuccess] = useState(false);
-
-//   const [createTask, { isLoading }] = useCreateTaskMutation();
-
-//   const validateForm = (): boolean => {
-//     const newErrors: FormErrors = {};
-
-//     if (!title.trim()) {
-//       newErrors.title = "Title is required";
-//     }
-
-//     const duration = parseInt(durationMinutes);
-//     if (!durationMinutes || isNaN(duration)) {
-//       newErrors.durationMinutes = "Duration is required";
-//     } else if (duration < TASK_DURATION.MIN_MINUTES) {
-//       newErrors.durationMinutes = `Duration must be at least ${TASK_DURATION.MIN_MINUTES} minutes`;
-//     } else if (duration > TASK_DURATION.MAX_MINUTES) {
-//       newErrors.durationMinutes = `Duration cannot exceed 30 days (${TASK_DURATION.MAX_MINUTES} minutes)`;
-//     }
-
-//     if (!assignToEmail.trim()) {
-//       newErrors.assignToEmail = "Email is required";
-//     } else if (!VALIDATION.EMAIL_REGEX.test(assignToEmail)) {
-//       newErrors.assignToEmail = "Please enter a valid email address";
-//     }
-
-//     setErrors(newErrors);
-//     return Object.keys(newErrors).length === 0;
-//   };
-
-//   const handleSubmit = async (): Promise<void> => {
-//     if (!validateForm()) {
-//       return;
-//     }
-
-//     try {
-//       const createTaskDto = {
-//         title: title.trim(),
-//         note: note.trim() || undefined,
-//         durationMinutes: parseInt(durationMinutes),
-//         assignToEmail: assignToEmail.trim(),
-//       };
-
-//       await createTask(createTaskDto).unwrap();
-
-//       setShowSuccess(true);
-
-//       // Reset form
-//       setTitle("");
-//       setNote("");
-//       setDurationMinutes("");
-//       setAssignToEmail("");
-//       setErrors({});
-
-//       // Hide success message after animation duration
-//       setTimeout(() => {
-//         setShowSuccess(false);
-//       }, ANIMATIONS.SUCCESS_DISPLAY);
-//     } catch (error: unknown) {
-//       logError("CreateTask", error);
-//       const errorMessage =
-//         (error as { data?: { message?: string } })?.data?.message ||
-//         ERROR_MESSAGES.SERVER_ERROR;
-//       Alert.alert("Error", errorMessage);
-//     }
-//   };
-
-//   return (
-//     <KeyboardAvoidingView
-//       behavior={Platform.OS === "ios" ? "padding" : "height"}
-//       style={styles.container}
-//     >
-//       <LinearGradient
-//         colors={["#FFFFFF", "#FFF8F3"]}
-//         style={styles.gradientBg}
-//         start={{ x: 0, y: 0 }}
-//         end={{ x: 0, y: 1 }}
-//       >
-//         <ScrollView
-//           contentContainerStyle={styles.scrollContent}
-//           showsVerticalScrollIndicator={false}
-//         >
-//           {/* Header */}
-//           <View style={styles.header}>
-//             <View style={styles.headerIconContainer}>
-//               <LinearGradient
-//                 colors={[COLORS.secondary, `${COLORS.secondary}DD`]}
-//                 style={styles.headerIcon}
-//                 start={{ x: 0, y: 0 }}
-//                 end={{ x: 1, y: 1 }}
-//               >
-//                 <Feather
-//                   name="plus-circle"
-//                   size={32}
-//                   color={COLORS.text.white}
-//                 />
-//               </LinearGradient>
-//             </View>
-//             <Text style={styles.headerTitle}>Create New Task</Text>
-//             <Text style={styles.headerSubtitle}>
-//               Assign work to your team and track progress
-//             </Text>
-//           </View>
-
-//           {/* Form Card */}
-//           <View style={[styles.formCard, SHADOWS.md]}>
-//             <FormInput
-//               label="Task Title"
-//               placeholder="e.g., Review project proposal"
-//               value={title}
-//               onChangeText={setTitle}
-//               error={errors.title}
-//               required
-//               icon="edit-3"
-//             />
-
-//             <FormInput
-//               label="Description"
-//               placeholder="Add task details and context"
-//               value={note}
-//               onChangeText={setNote}
-//               multiline
-//               numberOfLines={4}
-//               helpText="Keep it concise but informative"
-//               icon="message-square"
-//             />
-
-//             <FormInput
-//               label="Duration (minutes)"
-//               placeholder="e.g., 60"
-//               value={durationMinutes}
-//               onChangeText={setDurationMinutes}
-//               keyboardType="numeric"
-//               error={errors.durationMinutes}
-//               required
-//               helpText="Between 30 and 43,200 minutes (30 days)"
-//               icon="clock"
-//             />
-
-//             <FormInput
-//               label="Assign To Email"
-//               placeholder="colleague@company.com"
-//               value={assignToEmail}
-//               onChangeText={setAssignToEmail}
-//               keyboardType="email-address"
-//               autoCapitalize="none"
-//               error={errors.assignToEmail}
-//               required
-//               icon="user"
-//             />
-
-//             {/* Quick Tips */}
-//             <View style={styles.tipsContainer}>
-//               <View style={styles.tipIcon}>
-//                 <Feather name="zap" size={16} color={COLORS.secondary} />
-//               </View>
-//               <View style={styles.tipContent}>
-//                 <Text style={styles.tipTitle}>💡 Quick Tip</Text>
-//                 <Text style={styles.tipText}>
-//                   Clear and specific tasks get completed faster. Include
-//                   deadlines and context!
-//                 </Text>
-//               </View>
-//             </View>
-//           </View>
-
-//           {/* Submit Button */}
-//           <LinearGradient
-//             colors={
-//               isLoading
-//                 ? [COLORS.text.light, COLORS.text.light]
-//                 : [COLORS.secondary, COLORS.secondaryDark]
-//             }
-//             style={[styles.submitButton, SHADOWS.lg]}
-//             start={{ x: 0, y: 0 }}
-//             end={{ x: 1, y: 1 }}
-//           >
-//             <TouchableOpacity
-//               onPress={handleSubmit}
-//               disabled={isLoading}
-//               activeOpacity={0.8}
-//               style={styles.submitButtonContent}
-//             >
-//               {isLoading ? (
-//                 <ActivityIndicator color={COLORS.text.white} size="small" />
-//               ) : (
-//                 <>
-//                   <Feather name="send" size={18} color={COLORS.text.white} />
-//                   <Text style={styles.submitButtonText}>Create Task</Text>
-//                 </>
-//               )}
-//             </TouchableOpacity>
-//           </LinearGradient>
-
-//           <View style={styles.bottomSpacer} />
-//         </ScrollView>
-
-//         {/* Success Modal */}
-//         <SuccessModal visible={showSuccess} />
-//       </LinearGradient>
-//     </KeyboardAvoidingView>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//   },
-//   gradientBg: {
-//     flex: 1,
-//   },
-//   scrollContent: {
-//     padding: SPACING.lg,
-//   },
-//   header: {
-//     marginBottom: SPACING.xxl,
-//     paddingTop: SPACING.lg,
-//     alignItems: "center",
-//   },
-//   headerIconContainer: {
-//     marginBottom: SPACING.lg,
-//   },
-//   headerIcon: {
-//     width: 60,
-//     height: 60,
-//     borderRadius: 30,
-//     justifyContent: "center",
-//     alignItems: "center",
-//     shadowColor: COLORS.secondary,
-//     shadowOffset: { width: 0, height: 4 },
-//     shadowOpacity: 0.2,
-//     shadowRadius: 8,
-//     elevation: 4,
-//   },
-//   headerTitle: {
-//     fontSize: 32,
-//     fontWeight: "800",
-//     color: COLORS.text.primary,
-//     marginBottom: SPACING.sm,
-//     textAlign: "center",
-//   },
-//   headerSubtitle: {
-//     fontSize: 16,
-//     color: COLORS.text.secondary,
-//     fontWeight: "500",
-//     lineHeight: 24,
-//     textAlign: "center",
-//   },
-//   formCard: {
-//     backgroundColor: COLORS.surface,
-//     borderRadius: BORDER_RADIUS.lg,
-//     padding: SPACING.xl,
-//     marginBottom: SPACING.xl,
-//   },
-//   inputGroup: {
-//     marginBottom: SPACING.xl,
-//   },
-//   labelContainer: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     marginBottom: SPACING.sm,
-//   },
-//   label: {
-//     fontSize: 15,
-//     fontWeight: "700",
-//     color: COLORS.text.primary,
-//   },
-//   requiredDot: {
-//     fontSize: 16,
-//     color: COLORS.error,
-//     marginLeft: SPACING.xs,
-//   },
-//   inputWrapper: {
-//     position: "relative",
-//   },
-//   inputIconContainer: {
-//     position: "absolute",
-//     left: SPACING.md,
-//     top: 15,
-//     zIndex: 10,
-//   },
-//   input: {
-//     borderWidth: 1.5,
-//     borderColor: COLORS.border,
-//     borderRadius: BORDER_RADIUS.md,
-//     paddingHorizontal: SPACING.md,
-//     paddingVertical: SPACING.md,
-//     fontSize: 16,
-//     backgroundColor: COLORS.background,
-//     fontWeight: "500",
-//     color: COLORS.text.primary,
-//   },
-//   errorContainer: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     gap: SPACING.xs,
-//     marginTop: SPACING.sm,
-//   },
-//   errorText: {
-//     fontSize: 13,
-//     color: COLORS.error,
-//     fontWeight: "600",
-//     flex: 1,
-//   },
-//   helpText: {
-//     fontSize: 13,
-//     color: COLORS.text.light,
-//     marginTop: SPACING.sm,
-//     fontWeight: "500",
-//   },
-//   tipsContainer: {
-//     flexDirection: "row",
-//     backgroundColor: "#FFF8F3",
-//     borderRadius: BORDER_RADIUS.md,
-//     padding: SPACING.md,
-//     alignItems: "flex-start",
-//     gap: SPACING.md,
-//   },
-//   tipIcon: {
-//     width: 32,
-//     height: 32,
-//     borderRadius: 8,
-//     backgroundColor: COLORS.surface,
-//     justifyContent: "center",
-//     alignItems: "center",
-//   },
-//   tipContent: {
-//     flex: 1,
-//   },
-//   tipTitle: {
-//     fontSize: 14,
-//     fontWeight: "700",
-//     color: COLORS.secondary,
-//     marginBottom: SPACING.xs,
-//   },
-//   tipText: {
-//     fontSize: 13,
-//     color: COLORS.text.secondary,
-//     lineHeight: 20,
-//     fontWeight: "500",
-//   },
-//   submitButton: {
-//     borderRadius: BORDER_RADIUS.lg,
-//     overflow: "hidden",
-//     marginBottom: SPACING.xl,
-//   },
-//   submitButtonContent: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     justifyContent: "center",
-//     gap: SPACING.md,
-//     paddingVertical: SPACING.lg,
-//   },
-//   submitButtonText: {
-//     fontSize: 16,
-//     fontWeight: "700",
-//     color: COLORS.text.white,
-//   },
-//   bottomSpacer: {
-//     height: SPACING.xxxl,
-//   },
-//   // Success Modal Styles
-//   successOverlay: {
-//     ...StyleSheet.absoluteFillObject,
-//     backgroundColor: "rgba(0, 0, 0, 0.5)",
-//     justifyContent: "center",
-//     alignItems: "center",
-//     zIndex: 1000,
-//   },
-//   successModalContent: {
-//     width: "80%",
-//     maxWidth: 300,
-//     borderRadius: BORDER_RADIUS.xl,
-//     overflow: "hidden",
-//   },
-//   successGradient: {
-//     paddingVertical: SPACING.xxl,
-//     alignItems: "center",
-//     gap: SPACING.md,
-//   },
-//   successTitle: {
-//     fontSize: 24,
-//     fontWeight: "800",
-//     color: COLORS.text.white,
-//   },
-//   successMessage: {
-//     fontSize: 14,
-//     color: COLORS.text.white,
-//     fontWeight: "500",
-//     textAlign: "center",
-//     opacity: 0.95,
-//   },
-// });
-import { useCreateTaskMutation } from "../../store/api/task.api";
-import React, { useState } from "react";
+import React, {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  useMemo,
+} from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ActivityIndicator,
   StyleSheet,
   Animated,
   StatusBar,
+  Keyboard,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Feather from "@expo/vector-icons/Feather";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from "../../config/theme";
+
+import { useCreateTaskMutation } from "../../store/api/task.api";
+import { useLazySearchUsersQuery } from "../../store/api/auth.api";
+import Toast from "../../components/Toast";
+import {
+  COLORS,
+  SPACING,
+  BORDER_RADIUS,
+  SHADOWS,
+  TYPOGRAPHY,
+  PLATFORM_STYLES,
+} from "../../config/theme";
 import {
   TASK_DURATION,
   VALIDATION,
-  ANIMATIONS,
   ERROR_MESSAGES,
 } from "../../config/constants";
 import { logError } from "../../config/env";
+import { FONTS } from "@/components/fonts";
+import type { UserResponseData } from "../../types";
 
+// ─────────────────── Types ────────────────────────────────────
 interface FormErrors {
   title?: string;
   durationMinutes?: string;
   assignToEmail?: string;
 }
 
-const FormInput = ({
-  label,
-  placeholder,
-  value,
-  onChangeText,
-  error,
-  multiline,
-  numberOfLines,
-  keyboardType,
-  autoCapitalize,
-  required = false,
-  helpText,
-  icon,
-}: any) => {
-  return (
-    <View style={styles.inputGroup}>
-      <View style={styles.labelContainer}>
-        <Text style={styles.label}>{label}</Text>
-        {required && <Text style={styles.requiredDot}>*</Text>}
-      </View>
-      <View style={styles.inputWrapper}>
-        {icon && (
-          <View style={styles.inputIconContainer}>
-            <Feather name={icon} size={18} color={COLORS.secondary} />
-          </View>
-        )}
-        <TextInput
-          value={value}
-          onChangeText={onChangeText}
-          placeholder={placeholder}
-          multiline={multiline}
-          numberOfLines={numberOfLines}
-          keyboardType={keyboardType}
-          autoCapitalize={autoCapitalize}
-          textAlignVertical={multiline ? "top" : "center"}
-          style={[
-            styles.input,
-            {
-              borderColor: error ? COLORS.error : COLORS.border,
-              minHeight: multiline ? 100 : 48,
-              paddingLeft: icon ? 45 : SPACING.md,
-            },
-          ]}
-          placeholderTextColor={COLORS.text.light}
-        />
-      </View>
-      {error && (
-        <View style={styles.errorContainer}>
-          <Feather name="alert-circle" size={14} color={COLORS.error} />
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      )}
-      {helpText && !error && <Text style={styles.helpText}>{helpText}</Text>}
-    </View>
-  );
-};
+// ─────────────────── Success Overlay ──────────────────────────
+function SuccessOverlay({ visible }: { visible: boolean }) {
+  const scale = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
 
-const SuccessModal = ({ visible }: { visible: boolean }) => {
-  const scaleAnim = React.useRef(new Animated.Value(0)).current;
-  const opacityAnim = React.useRef(new Animated.Value(0)).current;
-
-  React.useEffect(() => {
+  useEffect(() => {
     if (visible) {
       Animated.parallel([
-        Animated.spring(scaleAnim, {
+        Animated.spring(scale, {
           toValue: 1,
           tension: 10,
           friction: 7,
           useNativeDriver: true,
         }),
-        Animated.timing(opacityAnim, {
+        Animated.timing(opacity, {
           toValue: 1,
-          duration: 300,
+          duration: 280,
           useNativeDriver: true,
         }),
       ]).start();
     } else {
-      // Reset animations when hidden so they replay next time
-      scaleAnim.setValue(0);
-      opacityAnim.setValue(0);
+      scale.setValue(0);
+      opacity.setValue(0);
     }
   }, [visible]);
 
   if (!visible) return null;
 
   return (
-    <View style={styles.successOverlay}>
+    <View style={s.successOverlay}>
       <Animated.View
-        style={[
-          styles.successModalContent,
-          {
-            transform: [{ scale: scaleAnim }],
-            opacity: opacityAnim,
-          },
-        ]}
+        style={[s.successCard, { transform: [{ scale }], opacity }]}
       >
         <LinearGradient
-          colors={[COLORS.success, `${COLORS.success}DD`]}
-          style={styles.successGradient}
+          colors={[COLORS.success, `${COLORS.success}CC`]}
+          style={s.successGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
-          <Feather name="check-circle" size={64} color={COLORS.text.white} />
-          <Text style={styles.successTitle}>Task Created!</Text>
-          <Text style={styles.successMessage}>
-            Your task has been assigned successfully
+          <View style={s.successIconRing}>
+            <Feather name="check" size={36} color={COLORS.success} />
+          </View>
+          <Text style={s.successTitle}>Task Created!</Text>
+          <Text style={s.successMsg}>
+            Successfully assigned to your teammate
           </Text>
         </LinearGradient>
       </Animated.View>
     </View>
   );
-};
+}
 
+// ─────────────────── User Search Dropdown ─────────────────────
+function UserSuggestion({
+  user,
+  onSelect,
+}: {
+  user: UserResponseData;
+  onSelect: (u: UserResponseData) => void;
+}) {
+  const initials = (user.name || user.email)
+    .split(" ")
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("");
+
+  return (
+    <TouchableOpacity
+      style={s.suggestionRow}
+      onPress={() => onSelect(user)}
+      activeOpacity={0.7}
+    >
+      <LinearGradient
+        colors={[COLORS.secondaryLight, COLORS.secondary]}
+        style={s.avatar}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <Text style={s.avatarText}>{initials}</Text>
+      </LinearGradient>
+      <View style={s.suggestionInfo}>
+        <Text style={s.suggestionName} numberOfLines={1}>
+          {user.name}
+        </Text>
+        <Text style={s.suggestionEmail} numberOfLines={1}>
+          {user.email}
+        </Text>
+      </View>
+      <Feather name="chevron-right" size={16} color={COLORS.text.tertiary} />
+    </TouchableOpacity>
+  );
+}
+
+// ─────────────────── Main Screen ──────────────────────────────
 export default function CreateTaskPage() {
   const insets = useSafeAreaInsets();
 
-  const [title, setTitle] = useState<string>("");
-  const [note, setNote] = useState<string>("");
-  const [durationMinutes, setDurationMinutes] = useState<string>("");
-  const [assignToEmail, setAssignToEmail] = useState<string>("");
+  // ── Form state
+  const [title, setTitle] = useState("");
+  const [note, setNote] = useState("");
+  const [durationMinutes, setDurationMinutes] = useState("");
+  const [assignQuery, setAssignQuery] = useState(""); // what user types
+  const [assignToEmail, setAssignToEmail] = useState(""); // resolved email
+  const [selectedUser, setSelectedUser] = useState<UserResponseData | null>(
+    null,
+  );
   const [errors, setErrors] = useState<FormErrors>({});
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
 
-  const [createTask, { isLoading }] = useCreateTaskMutation();
+  // ── Animations
+  const scrollY = useRef(new Animated.Value(0)).current;
 
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
+  // ── RTK Query
+  const [createTask, { isLoading: isCreating }] = useCreateTaskMutation();
+  const [triggerSearch, { data: searchData, isFetching: isSearching }] =
+    useLazySearchUsersQuery();
 
-    if (!title.trim()) {
-      newErrors.title = "Title is required";
+  // ── Debounced user search
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleAssignQueryChange = useCallback(
+    (text: string) => {
+      setAssignQuery(text);
+      setSelectedUser(null);
+      setAssignToEmail(text.includes("@") ? text : "");
+
+      if (searchTimer.current) clearTimeout(searchTimer.current);
+
+      if (text.trim().length >= 2) {
+        searchTimer.current = setTimeout(() => {
+          triggerSearch(text.trim());
+          setShowDropdown(true);
+        }, 350);
+      } else {
+        setShowDropdown(false);
+      }
+    },
+    [triggerSearch],
+  );
+
+  const handleSelectUser = useCallback((user: UserResponseData) => {
+    setSelectedUser(user);
+    setAssignQuery(user.name ? `${user.name} (${user.email})` : user.email);
+    setAssignToEmail(user.email);
+    setShowDropdown(false);
+    setErrors((prev) => ({ ...prev, assignToEmail: undefined }));
+    Keyboard.dismiss();
+  }, []);
+
+  const suggestions = useMemo(
+    () => (showDropdown ? (searchData?.users ?? []) : []),
+    [showDropdown, searchData],
+  );
+
+  // ── Validation
+  const validate = useCallback((): boolean => {
+    const next: FormErrors = {};
+
+    if (!title.trim()) next.title = "Title is required";
+
+    const dur = parseInt(durationMinutes, 10);
+    if (!durationMinutes || isNaN(dur)) {
+      next.durationMinutes = "Duration is required";
+    } else if (dur < TASK_DURATION.MIN_MINUTES) {
+      next.durationMinutes = `Minimum ${TASK_DURATION.MIN_MINUTES} min`;
+    } else if (dur > TASK_DURATION.MAX_MINUTES) {
+      next.durationMinutes = `Maximum 43,200 min (30 days)`;
     }
 
-    const duration = parseInt(durationMinutes);
-    if (!durationMinutes || isNaN(duration)) {
-      newErrors.durationMinutes = "Duration is required";
-    } else if (duration < TASK_DURATION.MIN_MINUTES) {
-      newErrors.durationMinutes = `Duration must be at least ${TASK_DURATION.MIN_MINUTES} minutes`;
-    } else if (duration > TASK_DURATION.MAX_MINUTES) {
-      newErrors.durationMinutes = `Duration cannot exceed 30 days (${TASK_DURATION.MAX_MINUTES} minutes)`;
+    const email = assignToEmail.trim();
+    if (!email) {
+      next.assignToEmail = "Please select or enter an assignee";
+    } else if (!VALIDATION.EMAIL_REGEX.test(email)) {
+      next.assignToEmail = "Enter a valid email address";
     }
 
-    if (!assignToEmail.trim()) {
-      newErrors.assignToEmail = "Email is required";
-    } else if (!VALIDATION.EMAIL_REGEX.test(assignToEmail)) {
-      newErrors.assignToEmail = "Please enter a valid email address";
-    }
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  }, [title, durationMinutes, assignToEmail]);
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (): Promise<void> => {
-    if (!validateForm()) return;
+  // ── Submit
+  const handleSubmit = useCallback(async () => {
+    if (!validate()) return;
+    Keyboard.dismiss();
 
     try {
-      const createTaskDto = {
+      await createTask({
         title: title.trim(),
         note: note.trim() || undefined,
-        durationMinutes: parseInt(durationMinutes),
+        durationMinutes: parseInt(durationMinutes, 10),
         assignToEmail: assignToEmail.trim(),
-      };
-
-      await createTask(createTaskDto).unwrap();
+      }).unwrap();
 
       setShowSuccess(true);
       setTitle("");
       setNote("");
       setDurationMinutes("");
+      setAssignQuery("");
       setAssignToEmail("");
+      setSelectedUser(null);
       setErrors({});
 
-      setTimeout(() => {
-        setShowSuccess(false);
-      }, ANIMATIONS.SUCCESS_DISPLAY);
+      setTimeout(() => setShowSuccess(false), 2800);
     } catch (error: unknown) {
       logError("CreateTask", error);
-      const errorMessage =
+      const msg =
         (error as { data?: { message?: string } })?.data?.message ||
         ERROR_MESSAGES.SERVER_ERROR;
-      Alert.alert("Error", errorMessage);
+      Toast.show({ type: "error", text1: "Error", text2: msg });
     }
-  };
+  }, [validate, createTask, title, note, durationMinutes, assignToEmail]);
 
+  // ── Scroll-driven header animations
+  const headerTitleScale = scrollY.interpolate({
+    inputRange: [0, 60],
+    outputRange: [1, 0.82],
+    extrapolate: "clamp",
+  });
+  const headerSubtitleOpacity = scrollY.interpolate({
+    inputRange: [0, 40],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
+  });
+
+  const themedStyles = makeStyles(insets);
+
+  // ── Render
   return (
     <>
-      <StatusBar barStyle="dark-content" backgroundColor="#FAF8F6" />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor={COLORS.background}
+        translucent
+      />
+
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={themedStyles.root}
       >
-        <LinearGradient
-          colors={["#FFFFFF", "#FFF8F3"]}
-          style={styles.gradientBg}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
+        {/* ── Header ─────────────────────────────────────────── */}
+        <Animated.View
+          style={[themedStyles.header, { paddingTop: insets.top + SPACING.lg }]}
         >
-          <ScrollView
-            contentContainerStyle={[
-              styles.scrollContent,
-              {
-                // ✅ Accounts for home indicator on iOS and
-                // gesture nav bar on Android
-                paddingBottom: insets.bottom + SPACING.xxxl,
-              },
+          <View style={themedStyles.headerRow}>
+            <View style={themedStyles.accentBar} />
+            <Animated.View style={{ transform: [{ scale: headerTitleScale }] }}>
+              <Text style={themedStyles.headerTitle}>CREATE</Text>
+            </Animated.View>
+          </View>
+
+          <Animated.View
+            style={[
+              themedStyles.subtitleRow,
+              { opacity: headerSubtitleOpacity },
             ]}
-            showsVerticalScrollIndicator={false}
           >
-            {/* Header */}
+            <View style={themedStyles.countPill}>
+              <LinearGradient
+                colors={[COLORS.secondaryLight, COLORS.secondary]}
+                style={themedStyles.countPillGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Feather name="plus" size={12} color={COLORS.text.white} />
+              </LinearGradient>
+            </View>
+            <Text style={themedStyles.headerSubtitle}>new task assignment</Text>
+          </Animated.View>
+        </Animated.View>
+
+        {/* ── Scrollable Form ─────────────────────────────────── */}
+        <Animated.ScrollView
+          contentContainerStyle={themedStyles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: true },
+          )}
+          scrollEventThrottle={16}
+        >
+          {/* ── TITLE ──────────────────────────────────────────── */}
+          <View style={themedStyles.section}>
+            <FieldLabel label="Task Title" required />
             <View
               style={[
-                styles.header,
-                {
-                  // ✅ Clears notch / Dynamic Island on iOS
-                  // and translucent status bar on Android
-                  paddingTop: insets.top + SPACING.lg,
-                },
+                themedStyles.inputBox,
+                errors.title ? themedStyles.inputBoxError : null,
               ]}
             >
-              <View style={styles.headerIconContainer}>
+              <Feather
+                name="edit-3"
+                size={17}
+                color={errors.title ? COLORS.error : COLORS.secondary}
+                style={themedStyles.inputIcon}
+              />
+              <TextInput
+                value={title}
+                onChangeText={(t) => {
+                  setTitle(t);
+                  setErrors((p) => ({ ...p, title: undefined }));
+                }}
+                placeholder="e.g., Review project proposal"
+                placeholderTextColor={COLORS.text.light}
+                style={themedStyles.input}
+                returnKeyType="next"
+              />
+              {title.length > 0 && (
+                <TouchableOpacity
+                  onPress={() => setTitle("")}
+                  style={themedStyles.clearBtn}
+                >
+                  <Feather name="x" size={14} color={COLORS.text.tertiary} />
+                </TouchableOpacity>
+              )}
+            </View>
+            {errors.title && <InlineError msg={errors.title} />}
+          </View>
+
+          {/* ── NOTE ───────────────────────────────────────────── */}
+          <View style={themedStyles.section}>
+            <FieldLabel label="Description" />
+            <View
+              style={[themedStyles.inputBox, themedStyles.inputBoxMultiline]}
+            >
+              <Feather
+                name="message-square"
+                size={17}
+                color={COLORS.secondary}
+                style={[themedStyles.inputIcon, { marginTop: 14 }]}
+              />
+              <TextInput
+                value={note}
+                onChangeText={setNote}
+                placeholder="Add task details and context..."
+                placeholderTextColor={COLORS.text.light}
+                style={[themedStyles.input, themedStyles.multilineInput]}
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+              />
+            </View>
+            <Text style={themedStyles.helpText}>
+              Optional — keep it concise but informative
+            </Text>
+          </View>
+
+          {/* ── DURATION ───────────────────────────────────────── */}
+          <View style={themedStyles.section}>
+            <FieldLabel label="Duration" required />
+            <View
+              style={[
+                themedStyles.inputBox,
+                errors.durationMinutes ? themedStyles.inputBoxError : null,
+              ]}
+            >
+              <Feather
+                name="clock"
+                size={17}
+                color={errors.durationMinutes ? COLORS.error : COLORS.secondary}
+                style={themedStyles.inputIcon}
+              />
+              <TextInput
+                value={durationMinutes}
+                onChangeText={(t) => {
+                  setDurationMinutes(t);
+                  setErrors((p) => ({ ...p, durationMinutes: undefined }));
+                }}
+                placeholder="e.g., 60"
+                placeholderTextColor={COLORS.text.light}
+                style={themedStyles.input}
+                keyboardType="numeric"
+                returnKeyType="next"
+              />
+              {durationMinutes.length > 0 && (
+                <View style={themedStyles.unitBadge}>
+                  <Text style={themedStyles.unitText}>min</Text>
+                </View>
+              )}
+            </View>
+            {errors.durationMinutes ? (
+              <InlineError msg={errors.durationMinutes} />
+            ) : (
+              <Text style={themedStyles.helpText}>
+                Between 30 – 43,200 minutes
+              </Text>
+            )}
+
+            {/* Quick duration chips */}
+            <View style={themedStyles.chipRow}>
+              {QUICK_DURATIONS.map((d) => (
+                <TouchableOpacity
+                  key={d.value}
+                  style={[
+                    themedStyles.chip,
+                    durationMinutes === String(d.value) &&
+                      themedStyles.chipActive,
+                  ]}
+                  onPress={() => {
+                    setDurationMinutes(String(d.value));
+                    setErrors((p) => ({ ...p, durationMinutes: undefined }));
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    style={[
+                      themedStyles.chipText,
+                      durationMinutes === String(d.value) &&
+                        themedStyles.chipTextActive,
+                    ]}
+                  >
+                    {d.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* ── ASSIGN TO ──────────────────────────────────────── */}
+          <View style={themedStyles.section}>
+            <FieldLabel label="Assign To" required />
+
+            {/* Selected user chip */}
+            {selectedUser ? (
+              <View style={themedStyles.selectedUserRow}>
                 <LinearGradient
-                  colors={[COLORS.secondary, `${COLORS.secondary}DD`]}
-                  style={styles.headerIcon}
+                  colors={[COLORS.secondaryLight, COLORS.secondary]}
+                  style={themedStyles.avatarSm}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
-                  <Feather
-                    name="plus-circle"
-                    size={32}
-                    color={COLORS.text.white}
-                  />
+                  <Text style={themedStyles.avatarSmText}>
+                    {(selectedUser.name || selectedUser.email)
+                      .split(" ")
+                      .slice(0, 2)
+                      .map((w) => w[0]?.toUpperCase() ?? "")
+                      .join("")}
+                  </Text>
                 </LinearGradient>
-              </View>
-              <Text style={styles.headerTitle}>Create New Task</Text>
-              <Text style={styles.headerSubtitle}>
-                Assign work to your team and track progress
-              </Text>
-            </View>
-
-            {/* Form Card */}
-            <View style={[styles.formCard, SHADOWS.md]}>
-              <FormInput
-                label="Task Title"
-                placeholder="e.g., Review project proposal"
-                value={title}
-                onChangeText={setTitle}
-                error={errors.title}
-                required
-                icon="edit-3"
-              />
-
-              <FormInput
-                label="Description"
-                placeholder="Add task details and context"
-                value={note}
-                onChangeText={setNote}
-                multiline
-                numberOfLines={4}
-                helpText="Keep it concise but informative"
-                icon="message-square"
-              />
-
-              <FormInput
-                label="Duration (minutes)"
-                placeholder="e.g., 60"
-                value={durationMinutes}
-                onChangeText={setDurationMinutes}
-                keyboardType="numeric"
-                error={errors.durationMinutes}
-                required
-                helpText="Between 30 and 43,200 minutes (30 days)"
-                icon="clock"
-              />
-
-              <FormInput
-                label="Assign To Email"
-                placeholder="colleague@company.com"
-                value={assignToEmail}
-                onChangeText={setAssignToEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                error={errors.assignToEmail}
-                required
-                icon="user"
-              />
-
-              {/* Quick Tips */}
-              <View style={styles.tipsContainer}>
-                <View style={styles.tipIcon}>
-                  <Feather name="zap" size={16} color={COLORS.secondary} />
-                </View>
-                <View style={styles.tipContent}>
-                  <Text style={styles.tipTitle}>💡 Quick Tip</Text>
-                  <Text style={styles.tipText}>
-                    Clear and specific tasks get completed faster. Include
-                    deadlines and context!
+                <View style={themedStyles.selectedUserInfo}>
+                  <Text style={themedStyles.selectedUserName}>
+                    {selectedUser.name}
+                  </Text>
+                  <Text style={themedStyles.selectedUserEmail}>
+                    {selectedUser.email}
                   </Text>
                 </View>
+                <TouchableOpacity
+                  onPress={() => {
+                    setSelectedUser(null);
+                    setAssignQuery("");
+                    setAssignToEmail("");
+                  }}
+                  style={themedStyles.clearBtn}
+                >
+                  <Feather name="x-circle" size={18} color={COLORS.error} />
+                </TouchableOpacity>
               </View>
-            </View>
+            ) : (
+              <>
+                <View
+                  style={[
+                    themedStyles.inputBox,
+                    errors.assignToEmail ? themedStyles.inputBoxError : null,
+                  ]}
+                >
+                  <Feather
+                    name={assignQuery.length > 0 ? "search" : "user"}
+                    size={17}
+                    color={
+                      errors.assignToEmail ? COLORS.error : COLORS.secondary
+                    }
+                    style={themedStyles.inputIcon}
+                  />
+                  <TextInput
+                    value={assignQuery}
+                    onChangeText={handleAssignQueryChange}
+                    placeholder="Search by name or email…"
+                    placeholderTextColor={COLORS.text.light}
+                    style={themedStyles.input}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    returnKeyType="done"
+                  />
+                  {isSearching && (
+                    <ActivityIndicator
+                      size="small"
+                      color={COLORS.secondary}
+                      style={{ marginRight: SPACING.sm }}
+                    />
+                  )}
+                  {assignQuery.length > 0 && !isSearching && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        setAssignQuery("");
+                        setAssignToEmail("");
+                        setShowDropdown(false);
+                      }}
+                      style={themedStyles.clearBtn}
+                    >
+                      <Feather
+                        name="x"
+                        size={14}
+                        color={COLORS.text.tertiary}
+                      />
+                    </TouchableOpacity>
+                  )}
+                </View>
 
-            {/* Submit Button */}
+                {/* Suggestions dropdown */}
+                {showDropdown && suggestions.length > 0 && (
+                  <View style={[themedStyles.dropdown, SHADOWS.md]}>
+                    {suggestions.slice(0, 6).map((user) => (
+                      <UserSuggestion
+                        key={user.uid}
+                        user={user}
+                        onSelect={handleSelectUser}
+                      />
+                    ))}
+                  </View>
+                )}
+
+                {showDropdown &&
+                  !isSearching &&
+                  suggestions.length === 0 &&
+                  assignQuery.length >= 2 && (
+                    <View style={themedStyles.noResultsBox}>
+                      <Feather
+                        name="user-x"
+                        size={18}
+                        color={COLORS.text.tertiary}
+                      />
+                      <Text style={themedStyles.noResultsText}>
+                        No users found for "{assignQuery}"
+                      </Text>
+                    </View>
+                  )}
+              </>
+            )}
+
+            {errors.assignToEmail && <InlineError msg={errors.assignToEmail} />}
+          </View>
+
+          {/* ── INFO CARD ─────────────────────────────────────── */}
+          <View style={themedStyles.infoCard}>
             <LinearGradient
-              colors={
-                isLoading
-                  ? [COLORS.text.light, COLORS.text.light]
-                  : [COLORS.secondary, COLORS.secondaryDark]
-              }
-              style={[styles.submitButton, SHADOWS.lg]}
+              colors={[`${COLORS.secondary}18`, `${COLORS.secondary}08`]}
+              style={themedStyles.infoCardGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <TouchableOpacity
-                onPress={handleSubmit}
-                disabled={isLoading}
-                activeOpacity={0.8}
-                style={styles.submitButtonContent}
-              >
-                {isLoading ? (
-                  <ActivityIndicator color={COLORS.text.white} size="small" />
-                ) : (
-                  <>
-                    <Feather name="send" size={18} color={COLORS.text.white} />
-                    <Text style={styles.submitButtonText}>Create Task</Text>
-                  </>
-                )}
-              </TouchableOpacity>
+              <Feather name="zap" size={16} color={COLORS.secondary} />
+              <Text style={themedStyles.infoText}>
+                Specific tasks get done faster — add clear context and a
+                realistic duration.
+              </Text>
             </LinearGradient>
-          </ScrollView>
+          </View>
 
-          <SuccessModal visible={showSuccess} />
-        </LinearGradient>
+          {/* ── SUBMIT BUTTON ─────────────────────────────────── */}
+          <TouchableOpacity
+            onPress={handleSubmit}
+            disabled={isCreating}
+            activeOpacity={0.85}
+            style={themedStyles.submitWrapper}
+          >
+            <LinearGradient
+              colors={
+                isCreating
+                  ? [COLORS.text.disabled, COLORS.text.disabled]
+                  : [COLORS.secondary, COLORS.secondaryDark]
+              }
+              style={themedStyles.submitBtn}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              {isCreating ? (
+                <ActivityIndicator color={COLORS.text.white} size="small" />
+              ) : (
+                <>
+                  <Feather name="send" size={18} color={COLORS.text.white} />
+                  <Text style={themedStyles.submitText}>
+                    Create & Assign Task
+                  </Text>
+                </>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.ScrollView>
+
+        <SuccessOverlay visible={showSuccess} />
       </KeyboardAvoidingView>
     </>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  gradientBg: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: SPACING.lg,
-    // base paddingBottom is overridden inline with insets.bottom
-  },
-  header: {
-    marginBottom: SPACING.xxl,
-    // base paddingTop is overridden inline with insets.top
-    alignItems: "center",
-  },
-  headerIconContainer: {
-    marginBottom: SPACING.lg,
-  },
-  headerIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: COLORS.secondary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  headerTitle: {
-    fontSize: 32,
-    fontWeight: "800",
-    color: COLORS.text.primary,
-    marginBottom: SPACING.sm,
-    textAlign: "center",
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: COLORS.text.secondary,
-    fontWeight: "500",
-    lineHeight: 24,
-    textAlign: "center",
-  },
-  formCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.xl,
-    marginBottom: SPACING.xl,
-  },
-  inputGroup: {
-    marginBottom: SPACING.xl,
-  },
-  labelContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: SPACING.sm,
-  },
-  label: {
-    fontSize: 15,
+// ─────────────────── Small helpers ────────────────────────────
+function FieldLabel({
+  label,
+  required,
+}: {
+  label: string;
+  required?: boolean;
+}) {
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: SPACING.sm,
+        gap: 4,
+      }}
+    >
+      <Text style={s.fieldLabel}>{label}</Text>
+      {required && <Text style={s.requiredStar}>*</Text>}
+    </View>
+  );
+}
+
+function InlineError({ msg }: { msg: string }) {
+  return (
+    <View style={s.errorRow}>
+      <Feather name="alert-circle" size={13} color={COLORS.error} />
+      <Text style={s.errorText}>{msg}</Text>
+    </View>
+  );
+}
+
+const QUICK_DURATIONS = [
+  { label: "30m", value: 30 },
+  { label: "1h", value: 60 },
+  { label: "2h", value: 120 },
+  { label: "4h", value: 240 },
+  { label: "1d", value: 480 },
+  { label: "1w", value: 2880 },
+];
+
+// ─────────────────── Static styles (for small helpers) ────────
+const s = StyleSheet.create({
+  fieldLabel: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
     fontWeight: "700",
     color: COLORS.text.primary,
+    letterSpacing: 0.3,
   },
-  requiredDot: {
-    fontSize: 16,
-    color: COLORS.error,
-    marginLeft: SPACING.xs,
+  requiredStar: {
+    fontSize: 14,
+    color: COLORS.secondary,
+    fontWeight: "700",
   },
-  inputWrapper: {
-    position: "relative",
-  },
-  inputIconContainer: {
-    position: "absolute",
-    left: SPACING.md,
-    top: 15,
-    zIndex: 10,
-  },
-  input: {
-    borderWidth: 1.5,
-    borderColor: COLORS.border,
-    borderRadius: BORDER_RADIUS.md,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.md,
-    fontSize: 16,
-    backgroundColor: COLORS.background,
-    fontWeight: "500",
-    color: COLORS.text.primary,
-  },
-  errorContainer: {
+  errorRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: SPACING.xs,
-    marginTop: SPACING.sm,
+    marginTop: SPACING.xs,
   },
   errorText: {
-    fontSize: 13,
+    fontSize: TYPOGRAPHY.fontSize.xs,
     color: COLORS.error,
     fontWeight: "600",
     flex: 1,
   },
-  helpText: {
-    fontSize: 13,
-    color: COLORS.text.light,
-    marginTop: SPACING.sm,
-    fontWeight: "500",
-  },
-  tipsContainer: {
+  // UserSuggestion
+  suggestionRow: {
     flexDirection: "row",
-    backgroundColor: "#FFF8F3",
-    borderRadius: BORDER_RADIUS.md,
-    padding: SPACING.md,
-    alignItems: "flex-start",
-    gap: SPACING.md,
+    alignItems: "center",
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm + 2,
+    gap: SPACING.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: COLORS.border,
   },
-  tipIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: COLORS.surface,
+  avatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
   },
-  tipContent: {
-    flex: 1,
-  },
-  tipTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: COLORS.secondary,
-    marginBottom: SPACING.xs,
-  },
-  tipText: {
-    fontSize: 13,
-    color: COLORS.text.secondary,
-    lineHeight: 20,
-    fontWeight: "500",
-  },
-  submitButton: {
-    borderRadius: BORDER_RADIUS.lg,
-    overflow: "hidden",
-    marginBottom: SPACING.xl,
-  },
-  submitButtonContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: SPACING.md,
-    paddingVertical: SPACING.lg,
-  },
-  submitButtonText: {
-    fontSize: 16,
+  avatarText: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
     fontWeight: "700",
     color: COLORS.text.white,
   },
-  // Success Modal
+  suggestionInfo: { flex: 1 },
+  suggestionName: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    fontWeight: "600",
+    color: COLORS.text.primary,
+  },
+  suggestionEmail: {
+    fontSize: TYPOGRAPHY.fontSize.xs,
+    color: COLORS.text.tertiary,
+    marginTop: 1,
+  },
+  // SuccessOverlay
   successOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0,0,0,0.52)",
     justifyContent: "center",
     alignItems: "center",
-    zIndex: 1000,
+    zIndex: 9999,
   },
-  successModalContent: {
-    width: "80%",
-    maxWidth: 300,
+  successCard: {
+    width: "78%",
+    maxWidth: 320,
     borderRadius: BORDER_RADIUS.xl,
     overflow: "hidden",
   },
   successGradient: {
-    paddingVertical: SPACING.xxl,
+    paddingVertical: SPACING.xxxl,
     alignItems: "center",
     gap: SPACING.md,
   },
+  successIconRing: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: COLORS.text.white,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   successTitle: {
-    fontSize: 24,
+    fontSize: TYPOGRAPHY.fontSize.xxl,
     fontWeight: "800",
     color: COLORS.text.white,
+    marginTop: SPACING.xs,
   },
-  successMessage: {
-    fontSize: 14,
+  successMsg: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
     color: COLORS.text.white,
-    fontWeight: "500",
+    opacity: 0.9,
     textAlign: "center",
-    opacity: 0.95,
+    paddingHorizontal: SPACING.xl,
   },
 });
+
+// ─────────────────── Dynamic styles ───────────────────────────
+const makeStyles = (insets: ReturnType<typeof useSafeAreaInsets>) =>
+  StyleSheet.create({
+    root: {
+      flex: 1,
+      backgroundColor: COLORS.background,
+    },
+
+    // ── Header (mirrors Outbox)
+    header: {
+      paddingHorizontal: SPACING.xxl,
+      paddingBottom: SPACING.lg,
+      backgroundColor: COLORS.background,
+    },
+    headerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: SPACING.sm,
+      paddingTop: 4,
+    },
+    accentBar: {
+      width: 4,
+      height: 32,
+      borderRadius: 2,
+      backgroundColor: COLORS.secondary,
+      marginRight: SPACING.xs,
+    },
+    headerTitle: {
+      fontSize: 34,
+      fontFamily: FONTS.sprintura,
+      color: COLORS.text.primary,
+      letterSpacing: 1.5,
+      includeFontPadding: false,
+      textAlignVertical: "center",
+    },
+    subtitleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: SPACING.sm,
+      gap: SPACING.sm,
+    },
+    countPill: {
+      borderRadius: BORDER_RADIUS.full,
+      overflow: "hidden",
+    },
+    countPillGradient: {
+      paddingHorizontal: SPACING.sm,
+      paddingVertical: 3,
+      borderRadius: BORDER_RADIUS.full,
+      minWidth: 26,
+      alignItems: "center",
+    },
+    headerSubtitle: {
+      fontSize: TYPOGRAPHY.fontSize.sm,
+      color: COLORS.text.tertiary,
+      fontWeight: "500",
+    },
+
+    // ── Scroll content
+    scrollContent: {
+      paddingHorizontal: SPACING.xxl,
+      paddingBottom: insets.bottom + PLATFORM_STYLES.tabBarHeight + SPACING.xl,
+      paddingTop: SPACING.md,
+    },
+
+    // ── Section wrapper
+    section: {
+      marginBottom: SPACING.xl,
+    },
+
+    // ── Input box
+    inputBox: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: COLORS.surface,
+      borderWidth: 1.5,
+      borderColor: COLORS.border,
+      borderRadius: BORDER_RADIUS.md,
+      minHeight: 50,
+    },
+    inputBoxError: {
+      borderColor: COLORS.error,
+    },
+    inputBoxMultiline: {
+      alignItems: "flex-start",
+      minHeight: 110,
+    },
+    inputIcon: {
+      marginHorizontal: SPACING.md,
+    },
+    input: {
+      flex: 1,
+      fontSize: TYPOGRAPHY.fontSize.md,
+      color: COLORS.text.primary,
+      fontWeight: "500",
+      paddingVertical: SPACING.md,
+      paddingRight: SPACING.md,
+    },
+    multilineInput: {
+      paddingTop: SPACING.md,
+    },
+    clearBtn: {
+      padding: SPACING.sm,
+      marginRight: SPACING.xs,
+    },
+    unitBadge: {
+      backgroundColor: `${COLORS.secondary}18`,
+      paddingHorizontal: SPACING.sm,
+      paddingVertical: 3,
+      borderRadius: BORDER_RADIUS.sm,
+      marginRight: SPACING.sm,
+    },
+    unitText: {
+      fontSize: TYPOGRAPHY.fontSize.xs,
+      color: COLORS.secondary,
+      fontWeight: "700",
+    },
+    helpText: {
+      fontSize: TYPOGRAPHY.fontSize.xs,
+      color: COLORS.text.tertiary,
+      marginTop: SPACING.xs,
+    },
+
+    // ── Quick duration chips
+    chipRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: SPACING.sm,
+      marginTop: SPACING.sm,
+    },
+    chip: {
+      paddingHorizontal: SPACING.md,
+      paddingVertical: 6,
+      borderRadius: BORDER_RADIUS.full,
+      borderWidth: 1.5,
+      borderColor: COLORS.border,
+      backgroundColor: COLORS.surface,
+    },
+    chipActive: {
+      borderColor: COLORS.secondary,
+      backgroundColor: `${COLORS.secondary}15`,
+    },
+    chipText: {
+      fontSize: TYPOGRAPHY.fontSize.xs,
+      color: COLORS.text.secondary,
+      fontWeight: "600",
+    },
+    chipTextActive: {
+      color: COLORS.secondary,
+    },
+
+    // ── User search dropdown
+    dropdown: {
+      marginTop: SPACING.xs,
+      backgroundColor: COLORS.surface,
+      borderRadius: BORDER_RADIUS.md,
+      borderWidth: 1,
+      borderColor: COLORS.border,
+      overflow: "hidden",
+    },
+    noResultsBox: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: SPACING.sm,
+      marginTop: SPACING.sm,
+      paddingVertical: SPACING.sm,
+      paddingHorizontal: SPACING.md,
+      backgroundColor: COLORS.surface,
+      borderRadius: BORDER_RADIUS.md,
+      borderWidth: 1,
+      borderColor: COLORS.border,
+    },
+    noResultsText: {
+      fontSize: TYPOGRAPHY.fontSize.sm,
+      color: COLORS.text.tertiary,
+      fontStyle: "italic",
+    },
+
+    // ── Selected user card
+    selectedUserRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: SPACING.sm,
+      backgroundColor: COLORS.surface,
+      borderWidth: 1.5,
+      borderColor: `${COLORS.secondary}55`,
+      borderRadius: BORDER_RADIUS.md,
+      paddingHorizontal: SPACING.md,
+      paddingVertical: SPACING.sm,
+    },
+    avatarSm: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    avatarSmText: {
+      fontSize: TYPOGRAPHY.fontSize.sm,
+      fontWeight: "700",
+      color: COLORS.text.white,
+    },
+    selectedUserInfo: { flex: 1 },
+    selectedUserName: {
+      fontSize: TYPOGRAPHY.fontSize.sm,
+      fontWeight: "700",
+      color: COLORS.text.primary,
+    },
+    selectedUserEmail: {
+      fontSize: TYPOGRAPHY.fontSize.xs,
+      color: COLORS.text.tertiary,
+      marginTop: 1,
+    },
+
+    // ── Info card
+    infoCard: {
+      borderRadius: BORDER_RADIUS.md,
+      overflow: "hidden",
+      marginBottom: SPACING.xl,
+    },
+    infoCardGradient: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: SPACING.sm,
+      padding: SPACING.md,
+      borderRadius: BORDER_RADIUS.md,
+      borderWidth: 1,
+      borderColor: `${COLORS.secondary}30`,
+    },
+    infoText: {
+      flex: 1,
+      fontSize: TYPOGRAPHY.fontSize.xs,
+      color: COLORS.text.secondary,
+      lineHeight: 18,
+      fontWeight: "500",
+    },
+
+    // ── Submit
+    submitWrapper: {
+      borderRadius: BORDER_RADIUS.lg,
+      overflow: "hidden",
+      marginBottom: SPACING.sm,
+      ...SHADOWS.lg,
+    },
+    submitBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: SPACING.sm,
+      paddingVertical: SPACING.lg,
+      borderRadius: BORDER_RADIUS.lg,
+    },
+    submitText: {
+      fontSize: TYPOGRAPHY.fontSize.md,
+      fontWeight: "700",
+      color: COLORS.text.white,
+      letterSpacing: 0.3,
+    },
+  });
